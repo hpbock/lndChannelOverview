@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
+
+    <title>LND invoice socket.io test page</title>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="//unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
+    <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Lightning Channels</h1>
+    </div>
+
+    <div id="channels">
+        <div class="container" v-for="channel in channels">
+            {{channel.chan_id}}: {{channel.capacity}} {{channel.local_balance}} {{100 * channel.local_balance / channel.capacity }}
+            <b-progress :value="channel.local_balance" :max="channel.capacity" show-progress></b-progress>
+        </div>
+    </div>
+</body>
+<script>
+    var app = new Vue({
+        el: '#channels',
+        data: {
+            "channels": [{
+                "active": true,
+                "remote_pubkey": "02312627fdf07fbdd7e5ddb136611bdde9b00d26821d14d94891395452f67af248",
+                "channel_point": "0d66b51059e48dee24228f2775fbda9d14759fe19fd787ecad627e1de06053ad:0",
+                "chan_id": "1591455120278421504",
+                "capacity": 3200000,
+                "local_balance": 3199817,
+                "remote_balance": "0",
+                "commit_fee": "183",
+                "commit_weight": "600",
+                "fee_per_kw": "253",
+                "unsettled_balance": "0",
+                "total_satoshis_sent": "0",
+                "total_satoshis_received": "0",
+                "num_updates": "0",
+                "pending_htlcs": [],
+                "csv_delay": 384,
+                "private": false
+            }, {
+                "active": true,
+                "remote_pubkey": "023a8dfe081c6bbd0504e599f33d39d17687de63023a8b20afcb59147d9d77c19d",
+                "channel_point": "eb6e3f6ddb33bae37bd1b60b1cd462d57fd4a71934f1944d9c1fec12bece7ceb:0",
+                "chan_id": "1591459518324342784",
+                "capacity": 3200000,
+                "local_balance": 3199817,
+                "remote_balance": "0",
+                "commit_fee": "183",
+                "commit_weight": "600",
+                "fee_per_kw": "253",
+                "unsettled_balance": "0",
+                "total_satoshis_sent": "0",
+                "total_satoshis_received": "0",
+                "num_updates": "0",
+                "pending_htlcs": [],
+                "csv_delay": 384,
+                "private": false
+            }]
+        }
+    })
+</script>
+
+</html>
