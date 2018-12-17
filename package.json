@@ -1,0 +1,9 @@
+{
+  "name": "lndChannelOverview",
+  "version": "1.0.0",
+  "description": "overview about open channels of a lnd node",
+  "main": "index.js",
+  "repository": "https://github.com/hpbock/lndChannelOverview",
+  "author": "Hans-Peter Bock <hpbock@avaapgh.de>",
+  "license": "MIT"
+}
