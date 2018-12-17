@@ -66,7 +66,7 @@ app.get('/channels', function(req, res, next) {
         if (err) {
             res.send(500, { error: 'request failed' });
         } else {
-            res.send(data);
+            res.send(response);
         }
     })
 });
