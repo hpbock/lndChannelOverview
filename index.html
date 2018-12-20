@@ -21,9 +21,9 @@
     </div>
 
     <div id="channels">
-        <div class="container" v-for="channel in channels">
-            {{channel.chan_id}}: {{channel.capacity}}
-            <b-progress :value="parseInt(channel.local_balance)" :max="parseInt(channel.capacity)" show-progress></b-progress>
+        <div class="container" v-for="(v,k) in channels">
+            {{k}}: {{v.capacity}} {{v.remote_pubkey}}
+            <b-progress :value="parseInt(v.local_balance)" :max="parseInt(v.capacity)" :variant="v.active?v.private?'secondary':'primary':'dark'" show-progress></b-progress>
         </div>
     </div>
 </body>
@@ -31,21 +31,41 @@
     var app = new Vue({
         el: '#channels',
         data: {
-            "channels": []
+            "channels": {},
+            "nodes": {},
+            "edges": {}
         },
         methods: {
             getListOfChannels: function() {
                 this.$http.get('channels', {}).then(response => {
-                    this.channels = response.body.channels;
+                    let channels = response.body.channels.sort(function(a, b) {
+                        return parseInt(a.capacity) < parseInt(b.capacity);
+                    });
+                    for (let channel of channels) {
+                        this.$set(this.channels, channel.chan_id, channel);
+                    }
                 }, error => {
                     console.log("Error: ", error);
-                    // error callback
                 });
-
+            },
+            getChannelGraph: function() {
+                this.$http.get('channelgraph', {}).then(response => {
+                    for (let node of response.body.nodes.sort((a, b) => {
+                            return parseInt(a.last_update) < parseInt(b.last_update);
+                        })) {
+                        this.$set(this.nodes, node.pub_key, node);
+                    }
+                    for (let edge of response.body.edges) {
+                        this.$set(this.edges, edge.channel_id, edge);
+                    }
+                }, error => {
+                    console.log(error);
+                });
             }
         }
     })
     app.getListOfChannels();
+    setTimeout(app.getChannelGraph(), 2000);
 </script>
 
 </html>

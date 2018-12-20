@@ -71,4 +71,14 @@ app.get('/channels', function(req, res, next) {
     })
 });
 
+app.get('/channelgraph', function(req, res, next) {
+    lightning.describeGraph({}, function(err, response) {
+        if (err) {
+            res.send(500, { error: 'request failed' });
+        } else {
+            res.send(response);
+        }
+    })
+});
+
 server.listen(4202);
