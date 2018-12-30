@@ -7,7 +7,8 @@
     "author": "Hans-Peter Bock <hpbock@avaapgh.de>",
     "license": "MIT",
     "scripts": {
-        "start": "node index.js"
+        "start": "node index.js",
+        "testChanIds2Route": "curl -v -d @channelTestRequest.json -H 'Content-Type: application/json' http://localhost:4202/chanids2route"
     },
     "dependencies": {
         "commander": "^2.19.0",

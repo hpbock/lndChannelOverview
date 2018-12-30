@@ -2,6 +2,7 @@ const fs = require('fs');
 const grpc = require('grpc');
 const lnrpc = grpc.load('rpc.proto').lnrpc;
 const express = require('express');
+var bodyParser = require('body-parser');
 
 const program = require('commander');
 program
@@ -55,6 +56,7 @@ lightning.getInfo(request, function(err, response) {
 
 var app = express();
 var server = require('http').createServer(app);
+app.use(bodyParser.json({ type: 'application/json' }));
 
 // app.use(express.static(__dirname + '/node_modules'));
 app.get('/', function(req, res, next) {
@@ -79,6 +81,11 @@ app.get('/channelgraph', function(req, res, next) {
             res.send(response);
         }
     })
+});
+
+app.post('/chanids2route', function(req, res, next) {
+    console.log(req.body);
+    res.status(501).send({ error: 'not implemented' });
 });
 
 server.listen(4202);
