@@ -7,7 +7,7 @@
     <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
     <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
 
-    <title>LND invoice socket.io test page</title>
+    <title>LND channel overview</title>
 
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="//unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
@@ -22,7 +22,7 @@
 
     <div id="channels">
         <div class="container" v-for="(v,k) in channels">
-            {{k}}: {{v.capacity}} {{v.remote_pubkey}}
+            {{k}}: {{v.capacity}} {{v.remote_pubkey}} {{v}}
             <b-progress :value="parseInt(v.local_balance)" :max="parseInt(v.capacity)" :variant="v.active?v.private?'secondary':'primary':'dark'" show-progress></b-progress>
         </div>
     </div>
@@ -39,7 +39,7 @@
             getListOfChannels: function() {
                 this.$http.get('channels', {}).then(response => {
                     let channels = response.body.channels.sort(function(a, b) {
-                        return parseInt(a.capacity) < parseInt(b.capacity);
+                        return parseInt(a.capacity) > parseInt(b.capacity);
                     });
                     for (let channel of channels) {
                         this.$set(this.channels, channel.chan_id, channel);
