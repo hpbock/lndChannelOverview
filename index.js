@@ -83,9 +83,76 @@ app.get('/channelgraph', function(req, res, next) {
     })
 });
 
+function getOtherNode(thisNode, edge) {
+    if (thisNode === edge.node1_pub) return edge.node2_pub;
+    if (thisNode === edge.node2_pub) return edge.node1_pub;
+    console.error(thisNode + " is neither " + edge.node1_pub + " neither " + edge.node2_pub + ".");
+}
+
+function getOtherNodesPolicy(thisNode, edge) {
+    if (thisNode === edge.node1_pub) return edge.node2_policy;
+    if (thisNode === edge.node2_pub) return edge.node1_policy;
+    console.error(thisNode + " is neither " + edge.node1_pub + " neither " + edge.node2_pub + ".");
+}
+
 app.post('/chanids2route', function(req, res, next) {
     console.log(req.body);
-    res.status(501).send({ error: 'not implemented' });
+
+    console.log("own node pubkey: " + ownNodeKey);
+
+    let amount_msat = req.body.amount * 1000;
+    let hops = req.body.hops;
+    let node = ownNodeKey; // TODO this is incorrect - it should be read out of the last channel hop
+    let route = { "hops": [] };
+    let timeLockDelta = 0;
+    let totalTimeLock = 0;
+    while (0 < hops.length) {
+        chanId = hops.pop();
+        let edge = edges[chanId];
+        let policy = getOtherNodesPolicy(node, edge);
+        let fee_msat = Math.trunc(amount_msat * parseInt(policy.fee_rate_milli_msat) / 1000000 + parseInt(policy.fee_base_msat));
+        let routehop = {
+            "chan_id": chanId,
+            "chan_capacity": edge.capacity,
+            "amt_to_forward": Math.trunc(amount_msat / 1000),
+            "fee": Math.trunc(fee_msat / 1000),
+            "expiry": timeLockDelta,
+            "amt_to_forward_msat": amount_msat,
+            "fee_msat": fee_msat,
+            "pub_key": node
+        }
+        route.hops.unshift(routehop);
+        timeLockDelta = parseInt(policy.time_lock_delta);
+        totalTimeLock += timeLockDelta;
+        amount_msat += fee_msat;
+        node = getOtherNode(node, edge);
+    }
+    route.total_fees_msat = Math.trunc(amount_msat - req.body.amount * 1000);
+    route.total_amt_msat = amount_msat;
+    route.total_time_lock = totalTimeLock;
+    route.total_fees = Math.trunc(route.total_fees_msat / 1000);
+    route.total_amt = Math.trunc(amount_msat / 1000);
+
+    // fix time lock delta
+    let blockHeight = 1000000; // TODO insert current blockheight here
+    route.totalTimeLock += blockHeight;
+    for (h of route.hops) {
+        h.expiry += blockHeight;
+    }
+
+    res.status(200).send(route);
 });
+
+lightning.describeGraph({}, function(err, response) {
+    if (err) {
+        // nothing
+    } else {
+        edges = {};
+        for (chan of response.edges) {
+            edges[chan.channel_id] = chan;
+        }
+    }
+});
+
 
 server.listen(4202);
