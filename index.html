@@ -22,7 +22,7 @@
 
     <div id="channels">
         <div class="container" v-for="(v,k) in channels">
-            {{k}}: {{v.capacity}} {{v.remote_pubkey}} {{v}}
+            {{k}}: {{v.capacity}} {{v.local_balance}} <span class="text-monospace">{{v.remote_pubkey}}</span>
             <b-progress :value="parseInt(v.local_balance)" :max="parseInt(v.capacity)" :variant="v.active?v.private?'secondary':'primary':'dark'" show-progress></b-progress>
         </div>
     </div>

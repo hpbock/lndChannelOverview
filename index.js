@@ -90,6 +90,7 @@ function getOtherNode(thisNode, edge) {
 }
 
 function getOtherNodesPolicy(thisNode, edge) {
+    console.debug("edge " + edge);
     if (thisNode === edge.node1_pub) return edge.node2_policy;
     if (thisNode === edge.node2_pub) return edge.node1_policy;
     console.error(thisNode + " is neither " + edge.node1_pub + " neither " + edge.node2_pub + ".");
@@ -134,13 +135,21 @@ app.post('/chanids2route', function(req, res, next) {
     route.total_amt = Math.trunc(amount_msat / 1000);
 
     // fix time lock delta
-    let blockHeight = 1000000; // TODO insert current blockheight here
-    route.totalTimeLock += blockHeight;
-    for (h of route.hops) {
-        h.expiry += blockHeight;
-    }
+    lightning.getInfo(request, function(err, response) {
+        if (err) {
+            res.status(500).send(err);
 
-    res.status(200).send(route);
+        } else {
+            let blockHeight = response.block_height;
+            route.total_time_lock += blockHeight;
+            for (h of route.hops) {
+                h.expiry += blockHeight;
+            }
+            res.status(200).send({
+                "routes": [route]
+            });
+        }
+    });
 });
 
 lightning.describeGraph({}, function(err, response) {
