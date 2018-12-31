@@ -117,7 +117,7 @@ app.post('/chanids2route', function(req, res, next) {
             "chan_capacity": edge.capacity,
             "amt_to_forward": Math.trunc(amount_msat / 1000),
             "fee": Math.trunc(fee_msat / 1000),
-            "expiry": timeLockDelta,
+            "expiry": totalTimeLock,
             "amt_to_forward_msat": amount_msat,
             "fee_msat": fee_msat,
             "pub_key": node
