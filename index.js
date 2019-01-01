@@ -40,7 +40,7 @@ const macaroonCreds = grpc.credentials.createFromMetadataGenerator(function(args
     callback(null, metadata);
 });
 const creds = grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
-const lightning = new lnrpc.Lightning(program['lnd.rpcserver'], creds);
+const lightning = new lnrpc.Lightning(program['lnd.rpcserver'], creds, {'grpc.max_receive_message_length': 50*1024*1024});
 
 var ownNodeKey = "";
 
@@ -155,11 +155,13 @@ app.post('/chanids2route', function(req, res, next) {
 lightning.describeGraph({}, function(err, response) {
     if (err) {
         // nothing
+	console.log(err);
     } else {
         edges = {};
         for (chan of response.edges) {
             edges[chan.channel_id] = chan;
         }
+	console.log("got channel graph")
     }
 });
 
