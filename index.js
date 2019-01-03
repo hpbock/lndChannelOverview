@@ -40,7 +40,7 @@ const macaroonCreds = grpc.credentials.createFromMetadataGenerator(function(args
     callback(null, metadata);
 });
 const creds = grpc.credentials.combineChannelCredentials(sslCreds, macaroonCreds);
-const lightning = new lnrpc.Lightning(program['lnd.rpcserver'], creds, {'grpc.max_receive_message_length': 50*1024*1024});
+const lightning = new lnrpc.Lightning(program['lnd.rpcserver'], creds, { 'grpc.max_receive_message_length': 50 * 1024 * 1024 });
 
 var ownNodeKey = "";
 
@@ -106,12 +106,12 @@ app.post('/chanids2route', function(req, res, next) {
     let node = ownNodeKey; // TODO this is incorrect - it should be read out of the last channel hop
     let route = { "hops": [] };
     let timeLockDelta = 0;
-    let totalTimeLock = 0;
+    let totalTimeLock = 10;
+    let fee_msat = 0;
     while (0 < hops.length) {
         chanId = hops.pop();
         let edge = edges[chanId];
         let policy = getOtherNodesPolicy(node, edge);
-        let fee_msat = Math.trunc(amount_msat * parseInt(policy.fee_rate_milli_msat) / 1000000 + parseInt(policy.fee_base_msat));
         let routehop = {
             "chan_id": chanId,
             "chan_capacity": edge.capacity,
@@ -123,18 +123,19 @@ app.post('/chanids2route', function(req, res, next) {
             "pub_key": node
         }
         route.hops.unshift(routehop);
-        timeLockDelta = parseInt(policy.time_lock_delta);
         totalTimeLock += timeLockDelta;
+        timeLockDelta = parseInt(policy.time_lock_delta);
         amount_msat += fee_msat;
+        fee_msat = Math.trunc(amount_msat * parseInt(policy.fee_rate_milli_msat) / 1000000 + parseInt(policy.fee_base_msat));
         node = getOtherNode(node, edge);
     }
     route.total_fees_msat = Math.trunc(amount_msat - req.body.amount * 1000);
     route.total_amt_msat = amount_msat;
-    route.total_time_lock = totalTimeLock;
+    route.total_time_lock = totalTimeLock + timeLockDelta;
     route.total_fees = Math.trunc(route.total_fees_msat / 1000);
     route.total_amt = Math.trunc(amount_msat / 1000);
 
-    // fix time lock delta
+    // add current block height to time lock deltas
     lightning.getInfo(request, function(err, response) {
         if (err) {
             res.status(500).send(err);
@@ -155,13 +156,13 @@ app.post('/chanids2route', function(req, res, next) {
 lightning.describeGraph({}, function(err, response) {
     if (err) {
         // nothing
-	console.log(err);
+        console.log(err);
     } else {
         edges = {};
         for (chan of response.edges) {
             edges[chan.channel_id] = chan;
         }
-	console.log("got channel graph")
+        console.log("got channel graph")
     }
 });
 

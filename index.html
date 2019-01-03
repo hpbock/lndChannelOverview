@@ -21,10 +21,15 @@
     </div>
 
     <div id="channels">
-        <div class="container" v-for="(v,k) in channels">
+        <b-container v-for="(v,k) in channels">
+            <h2>
+                <b-badge v-if="v.private" variant="warning">private</b-badge>
+                <b-badge v-if="!v.active" variant="dark">inactive</b-badge>
+                {{nodes[v.remote_pubkey].alias}}
+            </h2>
             {{k}}: {{v.capacity}} {{v.local_balance}} <span class="text-monospace">{{v.remote_pubkey}}</span>
             <b-progress :value="parseInt(v.local_balance)" :max="parseInt(v.capacity)" :variant="v.active?v.private?'secondary':'primary':'dark'" show-progress></b-progress>
-        </div>
+        </b-container>
     </div>
 </body>
 <script>
@@ -32,8 +37,7 @@
         el: '#channels',
         data: {
             "channels": {},
-            "nodes": {},
-            "edges": {}
+            "nodes": {}
         },
         methods: {
             getListOfChannels: function() {
@@ -54,9 +58,6 @@
                             return parseInt(a.last_update) < parseInt(b.last_update);
                         })) {
                         this.$set(this.nodes, node.pub_key, node);
-                    }
-                    for (let edge of response.body.edges) {
-                        this.$set(this.edges, edge.channel_id, edge);
                     }
                 }, error => {
                     console.log(error);
