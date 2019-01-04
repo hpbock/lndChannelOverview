@@ -73,6 +73,17 @@ app.get('/channels', function(req, res, next) {
     })
 });
 
+app.get("/nodes/:pubkey", function(req, res) {
+    console.log(req.method + " " + req.url);
+    lightning.getNodeInfo({ pub_key: req.params.pubkey }, function(err, response) {
+        if (err) {
+            res.send(500, { error: 'request failed' });
+        } else {
+            res.send(response);
+        }
+    })
+});
+
 app.get('/channelgraph', function(req, res, next) {
     lightning.describeGraph({}, function(err, response) {
         if (err) {
@@ -82,6 +93,8 @@ app.get('/channelgraph', function(req, res, next) {
         }
     })
 });
+
+// --------------------------------------------------------------------------
 
 function getOtherNode(thisNode, edge) {
     if (thisNode === edge.node1_pub) return edge.node2_pub;

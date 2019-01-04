@@ -21,7 +21,7 @@
     </div>
 
     <div id="channels">
-        <b-container v-for="(v,k) in channels">
+        <b-container v-for="(v,k) in channels" :key="k">
             <h2>
                 <b-badge v-if="v.private" variant="warning">private</b-badge>
                 <b-badge v-if="!v.active" variant="dark">inactive</b-badge>
@@ -46,27 +46,28 @@
                         return parseInt(a.capacity) > parseInt(b.capacity);
                     });
                     for (let channel of channels) {
+                        if (!this.nodes[channel.remote_pubkey]) {
+                            this.$set(this.nodes, channel.remote_pubkey, {
+                                alias: channel.remote_pubkey
+                            })
+                            this.$http.get('nodes/' + channel.remote_pubkey, {}).then(response => {
+                                let nodeinfo = response.body;
+                                if ("" === nodeinfo.node.alias) nodeinfo.node.alias = "∅ " + nodeinfo.node.pub_key;
+                                this.$set(this.nodes, nodeinfo.node.pub_key, nodeinfo.node);
+
+                            }, error => {
+                                console.log("Error: ", error);
+                            });
+                        }
                         this.$set(this.channels, channel.chan_id, channel);
                     }
                 }, error => {
                     console.log("Error: ", error);
                 });
             },
-            getChannelGraph: function() {
-                this.$http.get('channelgraph', {}).then(response => {
-                    for (let node of response.body.nodes.sort((a, b) => {
-                            return parseInt(a.last_update) < parseInt(b.last_update);
-                        })) {
-                        this.$set(this.nodes, node.pub_key, node);
-                    }
-                }, error => {
-                    console.log(error);
-                });
-            }
         }
     })
     app.getListOfChannels();
-    setTimeout(app.getChannelGraph(), 2000);
 </script>
 
 </html>
