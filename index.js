@@ -166,12 +166,13 @@ app.post('/chanids2route', function(req, res, next) {
     });
 });
 
+edges = {};
+
 lightning.describeGraph({}, function(err, response) {
     if (err) {
         // nothing
         console.log(err);
     } else {
-        edges = {};
         for (chan of response.edges) {
             edges[chan.channel_id] = chan;
         }
@@ -179,5 +180,43 @@ lightning.describeGraph({}, function(err, response) {
     }
 });
 
+function updateChannelEdge(edgeUpdate) {
+    let chan_id = edgeUpdate.chan_id;
+    let advertising_node = edgeUpdate.advertising_node;
+    let policy = edgeUpdate.routing_policy;
+    let edge = edges[chan_id];
+    if (edge)
+        if (advertising_node === edge.node1_pub) edge.node1_policy = policy;
+        else edge.node2_policy = policy;
+    else {
+        console.log("Channel " + chan_id + " is unknown, requesting channel info.")
+        lightning.getChanInfo({ "chan_id": chan_id }, function(err, response) {
+            if (err) {
+                // nothing
+                console.log(err);
+            } else {
+                edges[chan_id] = response;
+            }
+        })
+    }
+}
+
+var scg = lightning.subscribeChannelGraph({})
+scg.on('data', function(response) {
+    // A response was received from the server.
+    for (edge of response.channel_updates) updateChannelEdge(edge);
+    for (closed of response.closed_chans) {
+        let edge = edges[closed.chan_id];
+        if (edge) delete edge;
+    }
+});
+scg.on('status', function(status) {
+    // The current status of the stream.
+    console.log(status);
+});
+scg.on('end', function() {
+    // The server has closed the stream.
+    console.error("The server has closed the stream.");
+});
 
 server.listen(4202);
